@@ -27,7 +27,7 @@ const navigationTheme: Theme = {
 
 export function AppNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{
