@@ -67,3 +67,11 @@ export function toAppError(error: unknown): AppError {
     message: "Something went wrong. Please try again.",
   };
 }
+
+export function getImageUrl(
+  path: string | null,
+  size: "w500" | "w780" | "w1280",
+): string | null {
+  if (!path) return null;
+  return `${config.TMDB_IMAGE_BASE_URL}/${size}${path}`;
+}
