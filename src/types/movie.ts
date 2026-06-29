@@ -18,7 +18,7 @@ export interface Movie {
 
 export interface MovieResponse {
   page: number;
-  result: Movie[];
+  results: Movie[];
   total_pages: number;
   total_results: number;
 }
@@ -40,3 +40,17 @@ export interface AppError {
   kind: AppErrorKind;
   message: string;
 }
+
+export interface FavoriteMovie {
+  id: number;
+  title: string;
+  poster_path: string | null;
+  release_date: string;
+  vote_average: number;
+  addedAt: number;
+}
+
+export type FavoritableMovie = Pick<
+  Movie,
+  "id" | "title" | "poster_path" | "release_date" | "vote_average"
+>;
