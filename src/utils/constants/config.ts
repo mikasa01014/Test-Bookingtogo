@@ -10,5 +10,7 @@ export function apiKeyConfig(): void {
       "[ENV] EXPO_PUBLIC_TMDB_API_KEY is not set. " +
         "Please, create a .env file based on .env.example thank you :)",
     );
+  } else {
+    console.log("run");
   }
 }
