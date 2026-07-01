@@ -1,9 +1,6 @@
 import { create } from "zustand";
 import { toAppError } from "../api/clients";
-import {
-  getPopularMovies,
-  searchMovies as searchApi,
-} from "../api/movieService";
+import { movieRepository } from "../repositories/movieRepository";
 import { AppError, Movie } from "../types/movie";
 
 type ListMode = "popular" | "search";
@@ -20,11 +17,14 @@ interface MovieStore {
   isLoading: boolean;
   error: AppError | null;
 
+  isRefreshing: boolean;
+
   loadPopularMovies: () => Promise<void>;
   searchMovies: (query: string) => Promise<void>;
   loadNextPage: () => Promise<void>;
   clearSearch: () => Promise<void>;
   retry: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 export const useMovieStore = create<MovieStore>((set, get) => ({
@@ -36,6 +36,7 @@ export const useMovieStore = create<MovieStore>((set, get) => ({
   isLoadingMore: false,
   isLoading: false,
   error: null,
+  isRefreshing: false,
 
   loadPopularMovies: async () => {
     set({
@@ -46,7 +47,7 @@ export const useMovieStore = create<MovieStore>((set, get) => ({
     });
 
     try {
-      const result = await getPopularMovies(1);
+      const result = await movieRepository.getPopularMovies(1);
       set({
         movies: result.results,
         page: result.page,
@@ -77,7 +78,7 @@ export const useMovieStore = create<MovieStore>((set, get) => ({
     });
 
     try {
-      const result = await searchApi(trimmed, 1);
+      const result = await movieRepository.searchMovies(trimmed, 1);
       set({
         movies: result.results,
         page: result.page,
@@ -104,8 +105,8 @@ export const useMovieStore = create<MovieStore>((set, get) => ({
       const nextPage = page + 1;
       const result =
         mode === "search"
-          ? await searchApi(searchQuery.trim(), nextPage)
-          : await getPopularMovies(nextPage);
+          ? await movieRepository.searchMovies(searchQuery.trim(), nextPage)
+          : await movieRepository.getPopularMovies(nextPage);
 
       set((state) => ({
         movies: [...state.movies, ...result.results],
@@ -128,6 +129,29 @@ export const useMovieStore = create<MovieStore>((set, get) => ({
       await get().searchMovies(searchQuery);
     } else {
       await get().loadPopularMovies();
+    }
+  },
+
+  refresh: async () => {
+    const { mode, searchQuery } = get();
+    set({ isRefreshing: true, error: null });
+    try {
+      const result =
+        mode === "search" && searchQuery.trim().length > 0
+          ? await movieRepository.searchMovies(searchQuery.trim(), 1)
+          : await movieRepository.getPopularMovies(1);
+
+      set({
+        movies: result.results,
+        page: result.page,
+        totalPages: result.total_pages,
+        isRefreshing: false,
+      });
+    } catch (err) {
+      set({
+        error: toAppError(err),
+        isRefreshing: false,
+      });
     }
   },
 }));

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { toAppError } from "../api/clients";
-import { getMovieDetail } from "../api/movieService";
+import { movieRepository } from "../repositories/movieRepository";
 import { AppError, MovieDetail } from "../types/movie";
 
 interface MovieDetailStore {
@@ -19,7 +19,7 @@ export const useMovieDetailStore = create<MovieDetailStore>((set) => ({
   loadMovieDetail: async (movieId: number) => {
     set({ isLoading: true, error: null });
     try {
-      const movie = await getMovieDetail(movieId);
+      const movie = await movieRepository.getMovieDetail(movieId);
       set({ movie, isLoading: false });
     } catch (err) {
       set({ error: toAppError(err), isLoading: false });

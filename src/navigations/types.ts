@@ -1,8 +1,13 @@
+import { NavigatorScreenParams } from "@react-navigation/native";
+
 export type RootStackParamList = {
-  Home: undefined;
-  MovieDetail: {
-    movieId: number;
-  };
+  Tabs: NavigatorScreenParams<TabParamList>;
+  MovieDetail: { movieId: number; posterUrl?: string | null };
+};
+
+export type TabParamList = {
+  HomeTab: undefined;
+  FavoritesTab: undefined;
 };
 
 declare global {

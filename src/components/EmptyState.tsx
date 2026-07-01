@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, spacing, typography } from "../themes/theme";
+import { useTheme } from "../themes/ThemeProvider";
 
 interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -13,16 +13,40 @@ export function EmptyState({
   title,
   message,
 }: EmptyStateProps) {
+  const { colors, spacing, typography } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingHorizontal: spacing.xl,
+          paddingVertical: spacing.xxl,
+          gap: spacing.sm,
+        },
+      ]}
+    >
       <Ionicons
         name={icon}
         size={44}
         color={colors.textTertiary}
-        style={styles.icon}
+        style={{ marginBottom: spacing.sm }}
       />
-      <Text style={styles.title}>{title}</Text>
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+      <Text
+        style={[typography.h3, { color: colors.text, textAlign: "center" }]}
+      >
+        {title}
+      </Text>
+      {message ? (
+        <Text
+          style={[
+            typography.body,
+            { color: colors.textSecondary, textAlign: "center" },
+          ]}
+        >
+          {message}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -32,21 +56,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xxl,
-    gap: spacing.sm,
-  },
-  icon: {
-    marginBottom: spacing.sm,
-  },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-    textAlign: "center",
-  },
-  message: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
   },
 });

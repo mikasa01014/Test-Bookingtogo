@@ -1,9 +1,5 @@
 import { create } from "zustand";
-import {
-  getFavorites,
-  removeFavorite,
-  saveFavorite,
-} from "../api/favoritesService";
+import { favoriteRepository } from "../repositories/favoriteRepository";
 import { FavoritableMovie, FavoriteMovie } from "../types/movie";
 
 interface FavoriteStore {
@@ -22,7 +18,7 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
   isLoaded: false,
 
   loadFavorites: async () => {
-    const favorites = await getFavorites();
+    const favorites = await favoriteRepository.getAll();
     set({
       favorites,
       favoriteIds: new Set(favorites.map((favorite) => favorite.id)),
@@ -34,16 +30,9 @@ export const useFavoriteStore = create<FavoriteStore>((set, get) => ({
     const isCurrentlyFavorite = get().favoriteIds.has(movie.id);
 
     if (isCurrentlyFavorite) {
-      await removeFavorite(movie.id);
+      await favoriteRepository.remove(movie.id);
     } else {
-      await saveFavorite({
-        id: movie.id,
-        title: movie.title,
-        poster_path: movie.poster_path,
-        release_date: movie.release_date,
-        vote_average: movie.vote_average,
-        addedAt: Date.now(),
-      });
+      await favoriteRepository.add(movie);
     }
 
     await get().loadFavorites();

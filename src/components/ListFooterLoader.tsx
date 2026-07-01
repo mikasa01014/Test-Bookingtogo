@@ -1,15 +1,18 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { colors, spacing } from "../themes/theme";
+import { useTheme } from "../themes/ThemeProvider";
 
 interface ListFooterLoaderProps {
   visible: boolean;
 }
 
 export function ListFooterLoader({ visible }: ListFooterLoaderProps) {
+  const { colors, spacing } = useTheme();
+
   if (!visible) return null;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingVertical: spacing.lg }]}>
       <ActivityIndicator size="small" color={colors.primary} />
     </View>
   );
@@ -17,7 +20,6 @@ export function ListFooterLoader({ visible }: ListFooterLoaderProps) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: spacing.lg,
     alignItems: "center",
   },
 });

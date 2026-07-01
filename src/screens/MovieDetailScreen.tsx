@@ -1,251 +1,182 @@
-import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Image } from "expo-image";
-import React, { useEffect, useLayoutEffect } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { getImageUrl } from "../api/clients";
+import React, { useEffect } from "react";
+import { Dimensions, StyleSheet, View } from "react-native";
+import Animated, {
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DetailBackdropHeader } from "../components/DetailBackdropHeader";
 import { ErrorView } from "../components/ErrorView";
-import { FavoriteButton } from "../components/FavoriteButton";
-import { GenreChip } from "../components/GenreChip";
 import { LoadingView } from "../components/LoadingView";
-import { RatingBadge } from "../components/RatingBadge";
+import { MovieDetailContent } from "../components/MovieDetailContent";
+import { useSharedPoster } from "../navigations/SharedPosterContext";
 import { RootStackParamList } from "../navigations/types";
-import { useFavoriteStore } from "../stores/favoriteStore";
-import { useMovieDetailStore } from "../stores/movieDetailStore";
-import { colors, radius, spacing, typography } from "../themes/theme";
-import {
-  formatRating,
-  formatReleaseDate,
-  formatRuntime,
-} from "../utils/formats";
+import { useMovieDetailScreenData } from "../navigations/useMovieDetailScreenData";
+import { useTheme } from "../themes/ThemeProvider";
 
-type MovieDetailRouteProps = RouteProp<RootStackParamList, "MovieDetail">;
-type MovieDetailNavigationProps = NativeStackNavigationProp<
+type DetailRouteProp = RouteProp<RootStackParamList, "MovieDetail">;
+type DetailNavProp = NativeStackNavigationProp<
   RootStackParamList,
   "MovieDetail"
 >;
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const BACKDROP_HEIGHT = SCREEN_WIDTH * 0.62;
+const BACKDROP_ANIM_MS = 360;
+const SHEET_ANIM_MS = 420;
+
 export function MovieDetailScreen() {
-  const route = useRoute<MovieDetailRouteProps>();
-  const navigation = useNavigation<MovieDetailNavigationProps>();
-  const { movieId } = route.params;
+  const route = useRoute<DetailRouteProp>();
+  const navigation = useNavigation<DetailNavProp>();
+  const insets = useSafeAreaInsets();
+  const { colors, radius } = useTheme();
+  const { movieId, posterUrl: routePosterUrl } = route.params;
+  const { consumeMeasurement } = useSharedPoster();
 
-  const movie = useMovieDetailStore((store) => store.movie);
-  const isLoading = useMovieDetailStore((store) => store.isLoading);
-  const error = useMovieDetailStore((store) => store.error);
-  const loadMovieDetail = useMovieDetailStore((store) => store.loadMovieDetail);
-  const reset = useMovieDetailStore((store) => store.reset);
+  const {
+    movie,
+    isLoading,
+    error,
+    isFavorite,
+    toggleFavorite,
+    backdropUrl,
+    retry,
+  } = useMovieDetailScreenData(movieId);
 
-  const isFavorite = useFavoriteStore((store) =>
-    store.favoriteIds.has(movieId),
-  );
-  const toggleFavorite = useFavoriteStore((store) => store.toggleFavorite);
+  const initialMeasurement = React.useRef(consumeMeasurement(movieId)).current;
+  const startFrame = initialMeasurement ?? {
+    x: 0,
+    y: insets.top,
+    width: SCREEN_WIDTH,
+    height: BACKDROP_HEIGHT,
+    posterUrl: routePosterUrl ?? null,
+  };
+
+  const backdropProgress = useSharedValue(0);
+  const sheetProgress = useSharedValue(0);
 
   useEffect(() => {
-    loadMovieDetail(movieId);
-    return () => reset();
-  }, [movieId, loadMovieDetail, reset]);
+    backdropProgress.value = withTiming(1, {
+      duration: BACKDROP_ANIM_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    sheetProgress.value = withTiming(1, {
+      duration: SHEET_ANIM_MS,
+      easing: Easing.out(Easing.back(0.9)),
+    });
+  }, [backdropProgress, sheetProgress]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({ title: movie?.title ?? "" });
-  }, [navigation, movie?.title]);
+  const backdropStyle = useAnimatedStyle(() => {
+    const x = startFrame.x + (0 - startFrame.x) * backdropProgress.value;
+    const y = startFrame.y + (0 - startFrame.y) * backdropProgress.value;
+    const width =
+      startFrame.width +
+      (SCREEN_WIDTH - startFrame.width) * backdropProgress.value;
+    const height =
+      startFrame.height +
+      (BACKDROP_HEIGHT - startFrame.height) * backdropProgress.value;
+    const borderRadius = 10 * (1 - backdropProgress.value);
 
-  if (isLoading) {
-    return <LoadingView message="Loading movie detail" />;
+    return {
+      position: "absolute",
+      left: x,
+      top: y,
+      width,
+      height,
+      borderRadius,
+      overflow: "hidden",
+    };
+  });
+
+  const sheetStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(sheetProgress.value, [0, 1], [60, 0]);
+    const cornerRadius = interpolate(
+      sheetProgress.value,
+      [0, 1],
+      [radius.xl, 0],
+      "clamp",
+    );
+    return {
+      opacity: interpolate(
+        sheetProgress.value,
+        [0, 0.4, 1],
+        [0, 1, 1],
+        "clamp",
+      ),
+      transform: [{ translateY }],
+      borderTopLeftRadius: cornerRadius,
+      borderTopRightRadius: cornerRadius,
+      backgroundColor: colors.background,
+    };
+  });
+
+  if (isLoading && !movie) {
+    return (
+      <View style={[styles.fill, { backgroundColor: colors.background }]}>
+        <Animated.View style={backdropStyle}>
+          <DetailBackdropHeader
+            movie={null}
+            backdropUrl={startFrame.posterUrl}
+            isFavorite={false}
+            onToggleFavorite={() => {}}
+            onBack={() => navigation.goBack()}
+            topSafeInset={insets.top}
+          />
+        </Animated.View>
+        <View style={{ marginTop: BACKDROP_HEIGHT }}>
+          <LoadingView message="Loading movie details..." fullScreen={false} />
+        </View>
+      </View>
+    );
   }
 
   if (error || !movie) {
     return (
-      <ErrorView
-        error={error ?? { kind: "not_found", message: "Movie not found" }}
-        onRetry={() => loadMovieDetail(movieId)}
-      />
+      <View style={[styles.fill, { backgroundColor: colors.background }]}>
+        <ErrorView
+          error={error ?? { kind: "not_found", message: "Movie not found." }}
+          onRetry={retry}
+        />
+      </View>
     );
   }
 
-  const backdropUrl = getImageUrl(movie.backdrop_path, "w1280");
-
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
+    <View
+      style={[
+        styles.fill,
+        {
+          backgroundColor: colors.background,
+        },
+      ]}
     >
-      <View style={styles.backdropWrapper}>
-        {backdropUrl ? (
-          <Image
-            source={{ uri: backdropUrl }}
-            style={styles.backdrop}
-            contentFit="cover"
-            transition={200}
-          />
-        ) : (
-          <View style={[styles.backdrop, styles.backdropPlaceholder]}>
-            <Ionicons
-              name="film-outline"
-              size={56}
-              color={colors.textTertiary}
-            />
-          </View>
-        )}
-        <View style={styles.backdropGradientOverlay} />
-        <View style={styles.favoriteButtonWrapper}>
-          <FavoriteButton
-            isFavorite={isFavorite}
-            onPress={() => toggleFavorite(movie)}
-          />
-        </View>
-      </View>
+      <Animated.View style={backdropStyle}>
+        <DetailBackdropHeader
+          movie={movie}
+          backdropUrl={backdropUrl ?? startFrame.posterUrl}
+          isFavorite={isFavorite}
+          onToggleFavorite={() => toggleFavorite(movie)}
+          onBack={() => navigation.goBack()}
+          topSafeInset={insets.top}
+        />
+      </Animated.View>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>{movie.title}</Text>
-        {movie.tagline ? (
-          <Text style={styles.tagline}>&quot;{movie.tagline}&quot;</Text>
-        ) : null}
-
-        <View style={styles.metaRow}>
-          <RatingBadge value={formatRating(movie.vote_average)} size="large" />
-          <Text style={styles.metaText}>
-            {formatReleaseDate(movie.release_date)}
-          </Text>
-          {movie.runtime ? (
-            <Text style={styles.metaText}>{formatRuntime(movie.runtime)}</Text>
-          ) : null}
-        </View>
-
-        {movie.genres.length > 0 && (
-          <View style={styles.genreRow}>
-            {movie.genres.map((genre) => (
-              <GenreChip key={genre.id} name={genre.name} />
-            ))}
-          </View>
-        )}
-
-        <Text style={styles.sectionTitle}>Overview</Text>
-        <Text style={styles.overview}>
-          {movie.overview || "No overview on this movie"}
-        </Text>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>
-              {formatRating(movie.vote_average)}
-            </Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>
-              {movie.vote_count.toLocaleString()}
-            </Text>
-            <Text style={styles.statLabel}>Votes</Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+      <Animated.View
+        style={[styles.fill, sheetStyle, { marginTop: BACKDROP_HEIGHT - 18 }]}
+      >
+        <MovieDetailContent movie={movie} topInset={18} />
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fill: {
     flex: 1,
-    backgroundColor: colors.background,
-    marginTop: spacing.xxl + 50,
-  },
-  scrollContent: {
-    paddingBottom: spacing.xxl,
-    paddingTop: spacing.xxl,
-  },
-  backdropWrapper: {
-    width: "100%",
-    aspectRatio: 16 / 10,
-    backgroundColor: colors.surface,
-    position: "relative",
-  },
-  backdrop: {
-    width: "100%",
-    height: "100%",
-  },
-  backdropPlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  backdropGradientOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "40%",
-    backgroundColor: colors.overlay,
-  },
-  favoriteButtonWrapper: {
-    position: "absolute",
-    bottom: spacing.lg,
-    right: spacing.lg,
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    ...typography.h1,
-    color: colors.text,
-  },
-  tagline: {
-    ...typography.body,
-    color: colors.textTertiary,
-    fontStyle: "italic",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    flexWrap: "wrap",
-  },
-  metaText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  genreRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    color: colors.text,
-    marginTop: spacing.sm,
-  },
-  overview: {
-    ...typography.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginTop: spacing.sm,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  statDivider: {
-    width: 1,
-    height: "100%",
-    backgroundColor: colors.border,
-  },
-  statValue: {
-    ...typography.h2,
-    color: colors.primary,
-  },
-  statLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
   },
 });

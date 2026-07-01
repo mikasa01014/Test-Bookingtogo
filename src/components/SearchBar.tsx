@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
-import { colors, radius, spacing, typography } from "../themes/theme";
+import { useTheme } from "../themes/ThemeProvider";
 
 interface SearchBarProps {
   value: string;
@@ -16,16 +16,28 @@ export function SearchBar({
   onClear,
   placeholder,
 }: SearchBarProps) {
+  const { colors, radius, spacing, typography } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.md,
+          borderColor: colors.border,
+        },
+      ]}
+    >
       <Ionicons
         name="search"
         size={16}
         color={colors.textTertiary}
-        style={styles.icon}
+        style={{ marginRight: spacing.sm }}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, typography.body, { color: colors.text }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder ?? "Search Movie"}
@@ -57,20 +69,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
     height: 46,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  icon: {
-    marginRight: spacing.sm,
   },
   input: {
     flex: 1,
-    ...typography.body,
-    color: colors.text,
     height: "100%",
   },
 });

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing, typography } from "../themes/theme";
+import { useTheme } from "../themes/ThemeProvider";
 
 interface RatingBadgeProps {
   value: string;
@@ -10,15 +10,31 @@ interface RatingBadgeProps {
 
 export function RatingBadge({ value, size = "small" }: RatingBadgeProps) {
   const isSmall = size === "small";
+  const { colors, radius, spacing, typography } = useTheme();
+
   return (
     <View
       style={[
         styles.container,
-        isSmall ? styles.containerSmall : styles.containerLarge,
+        { backgroundColor: colors.overlay, borderRadius: radius.full },
+        isSmall
+          ? { paddingHorizontal: spacing.sm, paddingVertical: 3, gap: 3 }
+          : {
+              paddingHorizontal: spacing.md - 8,
+              paddingVertical: spacing.xs,
+              gap: spacing.xs,
+            },
       ]}
     >
       <Ionicons name="star" size={isSmall ? 11 : 16} color={colors.star} />
-      <Text style={isSmall ? styles.textSmall : styles.textLarge}>{value}</Text>
+      <Text
+        style={[
+          isSmall ? typography.small : typography.bodyBold,
+          { color: colors.text },
+        ]}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -27,25 +43,5 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.overlay,
-    borderRadius: radius.full,
-  },
-  containerSmall: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    gap: 3,
-  },
-  containerLarge: {
-    paddingHorizontal: spacing.md - 8,
-    paddingVertical: spacing.xs,
-    gap: spacing.xs,
-  },
-  textSmall: {
-    ...typography.small,
-    color: colors.text,
-  },
-  textLarge: {
-    ...typography.bodyBold,
-    color: colors.text,
   },
 });

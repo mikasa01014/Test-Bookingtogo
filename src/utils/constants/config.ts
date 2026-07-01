@@ -14,3 +14,5 @@ export function apiKeyConfig(): void {
     console.log("run");
   }
 }
+
+export const GLASS_TAB_BAR_HEIGHT = 90;

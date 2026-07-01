@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing, typography } from "../themes/theme";
+import { useTheme } from "../themes/ThemeProvider";
 import { AppError } from "../types/movie";
 
 interface ErrorViewProps {
@@ -23,27 +23,60 @@ export function ErrorView({
   fullScreen = true,
 }: ErrorViewProps) {
   const { icon, title } = getErrorPresentation(error);
+  const { colors, radius, spacing, typography } = useTheme();
 
   return (
-    <View style={[styles.container, fullScreen && styles.fullScreen]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingHorizontal: spacing.xl,
+          paddingVertical: spacing.xl,
+          gap: spacing.sm,
+        },
+        fullScreen && { flex: 1, backgroundColor: colors.background },
+      ]}
+    >
       <Ionicons
         name={icon}
         size={48}
         color={colors.textSecondary}
-        style={styles.icon}
+        style={{ marginBottom: spacing.sm }}
       />
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{error.message}</Text>
+      <Text
+        style={[typography.h3, { color: colors.text, textAlign: "center" }]}
+      >
+        {title}
+      </Text>
+      <Text
+        style={[
+          typography.body,
+          {
+            color: colors.textSecondary,
+            textAlign: "center",
+            marginBottom: spacing.md,
+          },
+        ]}
+      >
+        {error.message}
+      </Text>
       <Pressable
         style={({ pressed }) => [
-          styles.retryButton,
+          {
+            backgroundColor: colors.primary,
+            paddingHorizontal: spacing.xl,
+            paddingVertical: spacing.md,
+            borderRadius: radius.md,
+          },
           pressed && styles.retryButtonPressed,
         ]}
         onPress={onRetry}
         accessibilityRole="button"
         accessibilityLabel="Retry"
       >
-        <Text style={styles.retryText}>Try Again</Text>
+        <Text style={[typography.bodyBold, { color: colors.background }]}>
+          Try Again
+        </Text>
       </Pressable>
     </View>
   );
@@ -71,39 +104,8 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    gap: spacing.sm,
-  },
-  fullScreen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  icon: {
-    marginBottom: spacing.sm,
-  },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-    textAlign: "center",
-  },
-  message: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: spacing.md,
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
   },
   retryButtonPressed: {
     opacity: 0.8,
-  },
-  retryText: {
-    ...typography.bodyBold,
-    color: colors.background,
   },
 });
