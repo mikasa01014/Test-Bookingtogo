@@ -53,7 +53,7 @@ export const lightPalette: ColorPalette = {
   backgroundElevated: "#FFFFFF",
   surface: "#FFFFFF",
   surfaceElevated: "#F0F1F5",
-  primary: "#D6A608", // slightly deeper gold for contrast on light bg
+  primary: "#D6A608",
   primaryMuted: "#EDD68A",
   text: "#14151A",
   textSecondary: "#5B5D6B",

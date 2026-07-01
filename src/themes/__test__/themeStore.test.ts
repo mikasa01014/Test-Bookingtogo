@@ -34,7 +34,7 @@ describe("useThemeStore", () => {
 
   it("loadPreference reads back a previously persisted preference", async () => {
     await useThemeStore.getState().setPreference("light");
-    useThemeStore.setState({ preference: "system", isLoaded: false }); // simulate fresh app start
+    useThemeStore.setState({ preference: "system", isLoaded: false });
 
     await useThemeStore.getState().loadPreference();
 

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
   Easing,
@@ -124,9 +124,6 @@ function Particle({
   const dy = -Math.cos(rad) * distance;
 
   const style = useAnimatedStyle(() => {
-    // Particles shoot out over the first ~60% of the burst, then fade
-    // out over the remainder — gives a "pop and dissolve" feel rather
-    // than a linear fade the whole time.
     const travel = interpolate(burst.value, [0, 0.6, 1], [0, 1, 1], "clamp");
     const opacity = interpolate(
       burst.value,

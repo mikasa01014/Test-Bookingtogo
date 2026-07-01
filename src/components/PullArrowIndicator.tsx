@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import ReanimatedAnimated, {
   interpolate,
@@ -11,7 +11,6 @@ import { useTheme } from "../themes/ThemeProvider";
 const PULL_THRESHOLD = 80;
 
 interface PullArrowIndicatorProps {
-  /** Raw pull distance in px (0 = not pulled, positive = pulled down). */
   pullDistance: SharedValue<number>;
   isRefreshing: boolean;
 }
@@ -42,7 +41,6 @@ export function PullArrowIndicator({
   });
 
   const arrowStyle = useAnimatedStyle(() => {
-    // 0deg (pointing down) below threshold, 180deg (pointing up) past it.
     const rotate = interpolate(
       pullDistance.value,
       [0, PULL_THRESHOLD],

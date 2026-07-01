@@ -19,7 +19,6 @@ export function toAppError(error: unknown): AppError {
   // eslint-disable-next-line import/no-named-as-default-member
   if (axios.isAxiosError(error)) {
     if (!error.response) {
-      // No response at all => no internet, DNS failure, or timeout.
       return {
         kind: "network",
         message:

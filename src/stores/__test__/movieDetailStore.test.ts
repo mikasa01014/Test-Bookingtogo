@@ -51,7 +51,7 @@ describe("useMovieDetailStore", () => {
   });
 
   it("sets isLoading to true while the request is in-flight", () => {
-    mockedGetDetail.mockReturnValue(new Promise(() => {})); // never resolves
+    mockedGetDetail.mockReturnValue(new Promise(() => {}));
 
     useMovieDetailStore.getState().loadMovieDetail(1);
 

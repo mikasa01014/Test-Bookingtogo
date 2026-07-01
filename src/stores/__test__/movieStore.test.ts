@@ -197,7 +197,7 @@ describe("useMovieStore", () => {
 
       const promise = useMovieStore.getState().refresh();
       expect(useMovieStore.getState().isRefreshing).toBe(true);
-      expect(useMovieStore.getState().isLoading).toBe(false); // full-screen loader NOT triggered
+      expect(useMovieStore.getState().isLoading).toBe(false);
 
       await promise;
 

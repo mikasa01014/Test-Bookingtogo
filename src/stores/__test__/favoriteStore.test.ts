@@ -36,7 +36,7 @@ describe("useFavoriteStore", () => {
     await useFavoriteStore
       .getState()
       .toggleFavorite(buildMovie({ id: 1, title: "Dune" }));
-    useFavoriteStore.setState({ isLoaded: false }); // force a re-load from storage
+    useFavoriteStore.setState({ isLoaded: false });
 
     await useFavoriteStore.getState().loadFavorites();
 
@@ -58,10 +58,10 @@ describe("useFavoriteStore", () => {
 
   it("toggleFavorite removes a movie that is already favorited", async () => {
     const movie = buildMovie({ id: 7 });
-    await useFavoriteStore.getState().toggleFavorite(movie); // add
+    await useFavoriteStore.getState().toggleFavorite(movie);
     expect(useFavoriteStore.getState().isFavorite(7)).toBe(true);
 
-    await useFavoriteStore.getState().toggleFavorite(movie); // remove
+    await useFavoriteStore.getState().toggleFavorite(movie);
 
     expect(useFavoriteStore.getState().isFavorite(7)).toBe(false);
   });
@@ -85,9 +85,6 @@ describe("useFavoriteStore", () => {
   });
 
   it("works the same when called with a MovieDetail-shaped object", async () => {
-    // Simulates calling toggleFavorite from the Detail screen, where the
-    // object has extra fields (genres, runtime, tagline) that aren't
-    // part of FavoritableMovie — structural typing means this just works.
     const movieDetailLike = {
       ...buildMovie({ id: 55, title: "From Detail Screen" }),
       genres: [{ id: 1, name: "Drama" }],

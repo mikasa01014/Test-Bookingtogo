@@ -23,7 +23,7 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useColorScheme(); // 'light' | 'dark' | null
+  const systemScheme = useColorScheme();
   const preference = useThemeStore((store) => store.preference);
 
   const scheme: ResolvedScheme = useMemo(() => {
