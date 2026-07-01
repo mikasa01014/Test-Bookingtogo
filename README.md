@@ -1,4 +1,4 @@
-# 🎬 Movie Explorer
+# 🎬 Test BookingToGo-Movie Explorer
 
 Aplikasi katalog film mobile yang menampilkan daftar film populer dari [The Movie Database (TMDB)](https://www.themoviedb.org/), dengan fitur pencarian, halaman detail, animasi interaktif, favorit lokal, dan dukungan light/dark theme.
 
